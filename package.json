@@ -1,0 +1,33 @@
+{
+  "name": "codepen-extractor",
+  "version": "0.1.0",
+  "description": "Extract, store, and transform CodePen animations locally with Puppeteer and Claude Code Desktop MCP integration",
+  "homepage": "https://github.com/j0KZ/codepen-extractor",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/j0KZ/codepen-extractor.git"
+  },
+  "bugs": {
+    "url": "https://github.com/j0KZ/codepen-extractor/issues"
+  },
+  "author": "j0KZ",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "start": "cd backend && npm start",
+    "lint": "eslint .",
+    "test": "cd backend && npx vitest run && cd ../frontend && npx vitest run"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
