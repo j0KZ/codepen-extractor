@@ -4,4 +4,4 @@ dist/
 *.log
 proyectos/
 .tmp_*
-*.lock
+*.tsbuildinfo
