@@ -1,0 +1,38 @@
+## merge-gate.yml — Sets pending check run on every PR
+#
+# Combined with branch protection requiring "merge-gate" check run,
+# this blocks ALL merges until a human runs the Approve Merge workflow.
+#
+# Defense layers:
+#   1. This workflow + branch protection (server-side, unbypassable)
+#   2. approve-merge.yml requires MERGE_PASSPHRASE from GitHub Secrets
+#   3. hooks/guard-destructive.sh blocks gh pr merge + gh workflow run approve-merge
+#   4. Pipeline protocol: "Nunca mergear sin checkpoint humano"
+
+name: Merge Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  checks: write
+
+jobs:
+  set-pending:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'merge-gate',
+              head_sha: context.payload.pull_request.head.sha,
+              status: 'in_progress',
+              output: {
+                title: 'Awaiting human approval',
+                summary: 'Run the Approve Merge workflow to unlock merging.'
+              }
+            });

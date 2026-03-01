@@ -1,0 +1,135 @@
+## auto-revert.yml — Reverts unauthorized PR merges to main
+#
+# Triggers on every push to main. If the push is a PR merge and the
+# PR does NOT have "merge-gate" check run completed with success, the
+# merge is automatically reverted and a comment is posted on the PR.
+#
+# Safe from infinite loops: pushes from GITHUB_TOKEN don't trigger
+# new workflow runs (built-in GitHub Actions behavior).
+#
+# Defense layers:
+#   1. merge-gate.yml sets in_progress check run on every PR
+#   2. approve-merge.yml requires MERGE_PASSPHRASE to set success
+#   3. This workflow reverts merges that bypass the gate
+#   4. hooks/guard-destructive.sh blocks gh pr merge (client-side)
+#
+# Security: All external input (commit messages, PR numbers) is handled
+# via actions/github-script (not shell run: blocks) to avoid injection.
+
+name: Auto-revert unauthorized merges
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+
+jobs:
+  check-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if merge was approved
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Get the commit that was just pushed
+            const commit = await github.rest.repos.getCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.sha
+            });
+            const message = commit.data.commit.message;
+
+            // Extract PR number from merge commit message
+            // Squash merge: "title (#123)"
+            // Merge commit: "Merge pull request #123 from ..."
+            const squashMatch = message.match(/\(#(\d+)\)\s*$/m);
+            const mergeMatch = message.match(/^Merge pull request #(\d+)/);
+            const prNumber = squashMatch
+              ? parseInt(squashMatch[1])
+              : mergeMatch
+                ? parseInt(mergeMatch[1])
+                : null;
+
+            if (!prNumber) {
+              console.log('Not a PR merge (direct push). Allowing.');
+              return;
+            }
+
+            // Validate extracted PR number
+            if (!Number.isInteger(prNumber) || prNumber <= 0) {
+              console.log('Invalid PR number extracted. Allowing.');
+              return;
+            }
+
+            console.log(`PR merge detected: #${prNumber}`);
+
+            // Get the PR to find head SHA
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+
+            // Check merge-gate check run on the PR's head commit
+            const checkRuns = await github.rest.checks.listForRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: pr.data.head.sha,
+              check_name: 'merge-gate'
+            });
+
+            const mergeGate = checkRuns.data.check_runs
+              .sort((a, b) => new Date(b.started_at) - new Date(a.started_at))[0];
+
+            if (mergeGate && mergeGate.status === 'completed' && mergeGate.conclusion === 'success') {
+              console.log(`merge-gate: success. PR #${prNumber} was approved.`);
+              return;
+            }
+
+            // Allow human merges — merge gate only blocks automated agents (bots)
+            const merger = pr.data.merged_by;
+            if (merger && merger.type === 'User') {
+              console.log(`Merged by human user: ${merger.login}. Allowing.`);
+              return;
+            }
+
+            // === UNAUTHORIZED MERGE — REVERT ===
+            const statusDesc = mergeGate ? (mergeGate.conclusion || mergeGate.status) : 'not found';
+            console.log(`UNAUTHORIZED MERGE. merge-gate status: ${statusDesc}`);
+            core.warning(`Reverting unauthorized merge of PR #${prNumber}`);
+
+            const { execSync } = require('child_process');
+            execSync('git config user.name "github-actions[bot]"');
+            execSync('git config user.email "github-actions[bot]@users.noreply.github.com"');
+            execSync('git revert --no-edit HEAD');
+            execSync('git push origin main');
+
+            // Post comment on the PR explaining what happened
+            const body = [
+              '## Auto-reverted: unauthorized merge',
+              '',
+              'This PR was merged without human approval',
+              '(`merge-gate` check: `' + statusDesc + '`).',
+              'The merge has been automatically reverted on main.',
+              '',
+              'To merge properly:',
+              '1. `gh workflow run approve-merge.yml -f pr=' + prNumber + ' -f passphrase=<your-passphrase>`',
+              '2. Then merge again via the PR merge button',
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: body
+            });
+
+            core.setFailed('Reverted unauthorized merge of PR #' + prNumber);
