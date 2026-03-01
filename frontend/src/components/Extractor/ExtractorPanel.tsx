@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { ProjectSummary } from '../../../../shared/types/index.js';
 import { useExtraction } from '../../hooks/useExtraction.js';
 
@@ -19,11 +19,13 @@ export function ExtractorPanel({ onExtractComplete }: ExtractorPanelProps) {
     await extract(url.trim());
   };
 
-  if (result && status === 'success') {
-    onExtractComplete(result);
-    reset();
-    setUrl('');
-  }
+  useEffect(() => {
+    if (result && status === 'success') {
+      onExtractComplete(result);
+      reset();
+      setUrl('');
+    }
+  }, [result, status, onExtractComplete, reset]);
 
   return (
     <div className="extractor-panel">

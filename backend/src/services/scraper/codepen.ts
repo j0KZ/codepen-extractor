@@ -120,8 +120,9 @@ async function extractWithRetry(url: string, retries: number = 3): Promise<Extra
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
 
-      // Don't retry validation errors
+      // Don't retry validation errors or non-transient extraction errors
       if (error instanceof ValidationError) throw error;
+      if (error instanceof ExtractionError) throw error;
 
       // Exponential backoff: 1s, 2s, 4s
       if (i < retries - 1) {
@@ -209,6 +210,7 @@ export async function extractAndSave(url: string): Promise<ProjectSummary> {
     return summary;
   } catch (error) {
     if (error instanceof ValidationError) throw error;
+    if (error instanceof ExtractionError) throw error;
 
     throw new ExtractionError(
       'EXTRACTION_FAILED',

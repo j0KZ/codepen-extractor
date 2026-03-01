@@ -18,30 +18,36 @@ export async function saveProjectFiles(
   const projectDir = join(env.PROJECTS_DIR, projectId);
   const tempDir = join(env.PROJECTS_DIR, `.tmp_${projectId}`);
 
-  // Write to temp directory first
-  await mkdir(tempDir, { recursive: true });
+  try {
+    // Write to temp directory first
+    await mkdir(tempDir, { recursive: true });
 
-  await writeFile(join(tempDir, 'index.html'), code.html, 'utf-8');
-  if (code.css) {
-    await writeFile(join(tempDir, 'style.css'), code.css, 'utf-8');
-  }
-  if (code.js) {
-    await writeFile(join(tempDir, 'script.js'), code.js, 'utf-8');
-  }
-  await writeFile(
-    join(tempDir, 'metadata.json'),
-    JSON.stringify(metadata, null, 2),
-    'utf-8'
-  );
+    await writeFile(join(tempDir, 'index.html'), code.html, 'utf-8');
+    if (code.css) {
+      await writeFile(join(tempDir, 'style.css'), code.css, 'utf-8');
+    }
+    if (code.js) {
+      await writeFile(join(tempDir, 'script.js'), code.js, 'utf-8');
+    }
+    await writeFile(
+      join(tempDir, 'metadata.json'),
+      JSON.stringify(metadata, null, 2),
+      'utf-8'
+    );
 
-  // Remove existing project dir if it exists
-  if (existsSync(projectDir)) {
-    await rm(projectDir, { recursive: true, force: true });
-  }
+    // Remove existing project dir if it exists
+    if (existsSync(projectDir)) {
+      await rm(projectDir, { recursive: true, force: true });
+    }
 
-  // Atomic move: rename temp to final
-  const { rename } = await import('fs/promises');
-  await rename(tempDir, projectDir);
+    // Atomic move: rename temp to final
+    const { rename } = await import('fs/promises');
+    await rename(tempDir, projectDir);
+  } catch (error) {
+    // Cleanup temp directory on failure
+    await rm(tempDir, { recursive: true, force: true }).catch(() => {});
+    throw error;
+  }
 }
 
 export async function readProjectFiles(
