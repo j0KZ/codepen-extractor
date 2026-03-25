@@ -44,6 +44,8 @@ export function CodeEditor({ code, originalCode, onChange, readOnly = false, cla
   onChangeRef.current = onChange;
   const codeRef = useRef(code);
   codeRef.current = code;
+  const isInternalChange = useRef(false);
+  const originalCodeRef = useRef(originalCode);
 
   const destroyEditors = useCallback(() => {
     if (mergeView.current) {
@@ -61,7 +63,7 @@ export function CodeEditor({ code, originalCode, onChange, readOnly = false, cla
     destroyEditors();
     clearElement(editorContainer.current);
 
-    const currentCode = getCodeForTab(code, activeTab);
+    const currentCode = getCodeForTab(codeRef.current, activeTab);
     const langExt = getLanguageExtension(activeTab);
 
     const sharedExtensions = [
@@ -73,8 +75,8 @@ export function CodeEditor({ code, originalCode, onChange, readOnly = false, cla
       EditorView.lineWrapping,
     ];
 
-    if (showDiff && originalCode) {
-      const origCode = getCodeForTab(originalCode, activeTab);
+    if (showDiff && originalCodeRef.current) {
+      const origCode = getCodeForTab(originalCodeRef.current, activeTab);
 
       const mv = new MergeView({
         a: {
@@ -94,6 +96,7 @@ export function CodeEditor({ code, originalCode, onChange, readOnly = false, cla
             ...(readOnly ? [] : [
               EditorView.updateListener.of((update) => {
                 if (update.docChanged && onChangeRef.current) {
+                  isInternalChange.current = true;
                   const newValue = update.state.doc.toString();
                   onChangeRef.current({
                     ...codeRef.current,
@@ -115,6 +118,7 @@ export function CodeEditor({ code, originalCode, onChange, readOnly = false, cla
         ...(readOnly ? [] : [
           EditorView.updateListener.of((update) => {
             if (update.docChanged && onChangeRef.current) {
+              isInternalChange.current = true;
               const newValue = update.state.doc.toString();
               onChangeRef.current({
                 ...codeRef.current,
@@ -130,7 +134,48 @@ export function CodeEditor({ code, originalCode, onChange, readOnly = false, cla
     }
 
     return destroyEditors;
-  }, [activeTab, showDiff, readOnly, originalCode, code, destroyEditors]);
+  }, [activeTab, showDiff, readOnly, destroyEditors]);
+
+  // Sync external code changes without recreating the editor
+  useEffect(() => {
+    if (isInternalChange.current) {
+      isInternalChange.current = false;
+      return;
+    }
+    const currentCode = getCodeForTab(code, activeTab);
+    if (editorView.current) {
+      const editorDoc = editorView.current.state.doc.toString();
+      if (editorDoc !== currentCode) {
+        editorView.current.dispatch({
+          changes: { from: 0, to: editorDoc.length, insert: currentCode },
+        });
+      }
+    }
+    if (mergeView.current) {
+      const bEditor = mergeView.current.b;
+      const editorDoc = bEditor.state.doc.toString();
+      if (editorDoc !== currentCode) {
+        bEditor.dispatch({
+          changes: { from: 0, to: editorDoc.length, insert: currentCode },
+        });
+      }
+    }
+  }, [code, activeTab]);
+
+  // Sync external originalCode changes — recreate MergeView only when originalCode actually changes
+  useEffect(() => {
+    if (originalCode === originalCodeRef.current) return;
+    originalCodeRef.current = originalCode;
+    if (!showDiff || !mergeView.current || !editorContainer.current) return;
+    const origCode = getCodeForTab(originalCode!, activeTab);
+    const aEditor = mergeView.current.a;
+    const aDoc = aEditor.state.doc.toString();
+    if (aDoc !== origCode) {
+      aEditor.dispatch({
+        changes: { from: 0, to: aDoc.length, insert: origCode },
+      });
+    }
+  }, [originalCode, activeTab, showDiff]);
 
   return (
     <div className={`code-editor ${className ?? ''}`}>
