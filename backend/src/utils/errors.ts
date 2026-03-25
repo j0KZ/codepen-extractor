@@ -1,3 +1,5 @@
+import type { Request, Response, NextFunction } from 'express';
+
 export class ApiError extends Error {
   constructor(
     public code: string,
@@ -34,4 +36,23 @@ export class ExtractionError extends ApiError {
     super(code, 500, message, details);
     this.name = 'ExtractionError';
   }
+}
+
+export function errorHandler(
+  err: unknown,
+  _req: Request,
+  res: Response,
+  _next: NextFunction,
+): void {
+  if (err instanceof ApiError) {
+    res.status(err.httpStatus).json({
+      error: { code: err.code, message: err.message },
+    });
+    return;
+  }
+
+  console.error('Unexpected error:', err);
+  res.status(500).json({
+    error: { code: 'INTERNAL_ERROR', message: 'Internal server error' },
+  });
 }
