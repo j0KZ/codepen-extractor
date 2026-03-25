@@ -1,0 +1,101 @@
+.iframe-viewer {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.iframe-viewer__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  background: #f8f8fa;
+  border-bottom: 1px solid #e8e8e8;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.iframe-viewer__title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.iframe-viewer__controls {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.iframe-viewer__size-btn {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: #555;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.iframe-viewer__size-btn:hover {
+  border-color: #4361ee;
+  color: #4361ee;
+}
+
+.iframe-viewer__size-btn--active {
+  background: #4361ee;
+  border-color: #4361ee;
+  color: #fff;
+}
+
+.iframe-viewer__size-btn--active:hover {
+  background: #3a56d4;
+  color: #fff;
+}
+
+.iframe-viewer__refresh-btn {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: #555;
+  margin-left: 0.4rem;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.iframe-viewer__refresh-btn:hover {
+  border-color: #4361ee;
+  color: #4361ee;
+}
+
+.iframe-viewer__container {
+  position: relative;
+  min-height: 300px;
+  display: flex;
+  justify-content: center;
+  background: #fafafa;
+}
+
+.iframe-viewer__loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  font-size: 0.9rem;
+  background: #fafafa;
+  z-index: 1;
+}
+
+.iframe-viewer__frame {
+  width: 100%;
+  min-height: 300px;
+  border: none;
+  display: block;
+  transition: max-width 0.2s ease;
+}
