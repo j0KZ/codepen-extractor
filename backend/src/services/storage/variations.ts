@@ -115,23 +115,23 @@ export async function saveVariation(
     const candidateDir = path.join(variationsDir, candidateId);
 
     try {
-      await fs.access(candidateDir);
-      // dir exists, collision — wait and retry
-      await new Promise((r) => setTimeout(r, 1));
-      continue;
-    } catch {
-      // dir doesn't exist, good
+      await fs.mkdir(candidateDir);
       variationId = candidateId;
       variationDir = candidateDir;
       break;
+    } catch (err: unknown) {
+      if ((err as NodeJS.ErrnoException).code === 'EEXIST') {
+        // collision — wait and retry
+        await new Promise((r) => setTimeout(r, 1));
+        continue;
+      }
+      throw err;
     }
   }
 
   if (!variationId) {
     throw new ApiError(409, 'VARIATION_ID_COLLISION', 'Could not generate unique variation ID after 3 attempts');
   }
-
-  await fs.mkdir(variationDir, { recursive: true });
 
   const now = new Date().toISOString();
   const metadata = {
