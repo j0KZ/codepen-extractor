@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { ProjectSummary } from '../../../shared/types/index.js';
 import { ExtractorPanel } from '../components/Extractor/ExtractorPanel.js';
+import { ProjectCard } from '../components/Gallery/ProjectCard.js';
 import { getProjects } from '../services/api.js';
 
 export function Home() {
@@ -26,6 +27,11 @@ export function Home() {
     setProjects((prev) => [project, ...prev.filter((p) => p.id !== project.id)]);
   };
 
+  const handleProjectClick = (project: ProjectSummary) => {
+    // TODO: navigate to project detail
+    console.log('Open project:', project.id);
+  };
+
   return (
     <div className="home">
       <ExtractorPanel onExtractComplete={handleExtractComplete} />
@@ -37,29 +43,15 @@ export function Home() {
         ) : projects.length === 0 ? (
           <p className="empty-text">No hay proyectos. Extrae tu primer CodePen.</p>
         ) : (
-          <ul className="projects-list">
+          <div className="projects-grid">
             {projects.map((project) => (
-              <li key={project.id} className="project-card">
-                <div className="project-info">
-                  <h3>{project.name}</h3>
-                  <p className="project-author">por {project.author}</p>
-                  <p className="project-url">
-                    <a href={project.url} target="_blank" rel="noopener noreferrer">
-                      {project.url}
-                    </a>
-                  </p>
-                </div>
-                <div className="project-meta">
-                  <span className={`status status-${project.status}`}>
-                    {project.status}
-                  </span>
-                  <span className="date">
-                    {new Date(project.extractedAt).toLocaleDateString('es')}
-                  </span>
-                </div>
-              </li>
+              <ProjectCard
+                key={project.id}
+                project={project}
+                onClick={handleProjectClick}
+              />
             ))}
-          </ul>
+          </div>
         )}
       </section>
     </div>

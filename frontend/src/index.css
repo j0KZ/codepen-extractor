@@ -129,52 +129,10 @@ body {
   padding: 2rem 0;
 }
 
-.projects-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 1rem;
-}
-
-.project-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 1rem;
-  border: 1px solid #e8e8e8;
-  border-radius: 8px;
-  transition: border-color 0.2s;
-}
-
-.project-card:hover {
-  border-color: #4361ee;
-}
-
-.project-info h3 {
-  font-size: 1rem;
-  margin-bottom: 0.25rem;
-}
-
-.project-author {
-  color: #666;
-  font-size: 0.85rem;
-}
-
-.project-url a {
-  color: #4361ee;
-  font-size: 0.8rem;
-  text-decoration: none;
-}
-
-.project-url a:hover {
-  text-decoration: underline;
-}
-
-.project-meta {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.25rem;
 }
 
 .status {
