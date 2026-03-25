@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import type { ProjectSummary, ExtractionStatus } from '../../../shared/types/index.js';
+import { CODEPEN_URL_REGEX } from '../../../shared/constants.js';
 import { extractPen } from '../services/api.js';
 import axios from 'axios';
 
@@ -10,8 +11,6 @@ interface UseExtractionReturn {
   extract: (url: string) => Promise<void>;
   reset: () => void;
 }
-
-const CODEPEN_URL_REGEX = /^https:\/\/(www\.)?codepen\.io\/[a-zA-Z0-9_-]+\/pen\/[a-zA-Z0-9]+(\/debug)?(\?.*)?$/;
 
 export function useExtraction(): UseExtractionReturn {
   const [status, setStatus] = useState<ExtractionStatus>('idle');
