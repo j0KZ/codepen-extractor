@@ -45,9 +45,19 @@ async function extractPen(url: string): Promise<ExtractedCode> {
 
     // Detect CodePen's "not found" page (returns 200 but shows error content)
     const is404Page = await page.evaluate(() => {
-      const title = document.title?.toLowerCase() || '';
-      const body = document.body?.textContent?.toLowerCase() || '';
-      return title.includes('404') || body.includes('this pen doesn') || body.includes('item not found');
+      const title = document.title?.toLowerCase() ?? '';
+      const headingText = Array.from(
+        document.querySelectorAll('h1, h2, [role="heading"]')
+      )
+        .map((el) => el.textContent?.toLowerCase() ?? '')
+        .join(' ');
+
+      const hasNotFoundHeading =
+        headingText.includes("this pen doesn't exist") ||
+        headingText.includes('item not found') ||
+        headingText.includes('pen not found');
+
+      return title.includes('404') || hasNotFoundHeading;
     });
 
     if (is404Page) {

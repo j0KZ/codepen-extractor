@@ -64,4 +64,31 @@ describe('PEN_NOT_FOUND', () => {
     expect(res.body.error.code).toBe('PEN_NOT_FOUND');
     expect(res.body.error.message).toBeDefined();
   });
+
+  it('returns 404 with PEN_NOT_FOUND on soft-404 (HTTP 200 with not-found heading)', async () => {
+    const puppeteer = await import('puppeteer');
+    const mockLaunch = vi.mocked(puppeteer.default.launch);
+
+    // Override mock: HTTP 200 but page has a not-found heading
+    const mockPage = {
+      setDefaultNavigationTimeout: vi.fn(),
+      goto: vi.fn().mockResolvedValue({ status: () => 200 }),
+      evaluate: vi.fn().mockImplementation((fn: Function) => {
+        // Simulate the soft-404 check returning true
+        return Promise.resolve(true);
+      }),
+      close: vi.fn(),
+    };
+    mockLaunch.mockResolvedValueOnce({
+      newPage: vi.fn().mockResolvedValue(mockPage),
+      close: vi.fn(),
+    } as any);
+
+    const res = await supertest(app)
+      .post('/api/extract')
+      .send({ url: 'https://codepen.io/someuser/pen/yyyyyy' });
+
+    expect(res.status).toBe(404);
+    expect(res.body.error.code).toBe('PEN_NOT_FOUND');
+  });
 });
