@@ -59,6 +59,31 @@ export interface VariationSummary {
   description?: string;
 }
 
+export interface Variation {
+  id: string;
+  projectId: string;
+  name: string;
+  createdAt: string;
+  description?: string;
+  code: {
+    html: string;
+    css?: string;
+    js?: string;
+  };
+  isPreferred?: boolean;
+}
+
+export interface SaveVariationInput {
+  name: string;
+  description?: string;
+  code: {
+    html: string;
+    css?: string;
+    js?: string;
+  };
+  isPreferred?: boolean;
+}
+
 export interface ProjectCode {
   html: string;
   css?: string;
@@ -72,6 +97,14 @@ export interface ProjectWithCode extends ProjectSummary {
 }
 
 export interface ApiError {
+  error: {
+    code: string;
+    message: string;
+    details?: Record<string, unknown>;
+  };
+}
+
+export interface ApiErrorResponse {
   error: {
     code: string;
     message: string;
