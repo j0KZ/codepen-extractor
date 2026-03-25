@@ -1,54 +1,26 @@
-import { Router, type Request, type Response } from "express";
-import { v4 as uuidv4 } from "uuid";
-import { isValidProjectId, projectExists } from "../utils/projectExists.js";
-import { processTransformJob } from "../services/transform/transformHandler.js";
+import { Router, type Request, type Response } from 'express';
+import { v4 as uuidv4 } from 'uuid';
+import { isValidProjectId, projectExists } from '../utils/projectExists.js';
+import { processTransformJob } from '../services/transform/transformHandler.js';
+import { ValidationError, NotFoundError } from '../utils/errors.js';
 
-export interface ApiError {
-  error: {
-    code: string;
-    message: string;
-    details?: Record<string, unknown>;
-  };
-}
+const transformRouter = Router();
 
-export const transformRouter = Router();
-
-transformRouter.post("/:id", (req: Request, res: Response) => {
+transformRouter.post('/:id', (req: Request, res: Response) => {
   const projectId = req.params.id as string;
 
   if (!isValidProjectId(projectId)) {
-    const body: ApiError = {
-      error: {
-        code: "INVALID_REQUEST",
-        message: `ID de proyecto inválido: ${projectId}`,
-      },
-    };
-    res.status(400).json(body);
-    return;
+    throw new ValidationError('INVALID_REQUEST', `ID de proyecto inválido: ${projectId}`);
   }
 
   const { message } = req.body as { message?: unknown };
 
-  if (!message || typeof message !== "string" || message.trim() === "") {
-    const body: ApiError = {
-      error: {
-        code: "INVALID_REQUEST",
-        message: "El campo 'message' es requerido y debe ser un string no vacío",
-      },
-    };
-    res.status(400).json(body);
-    return;
+  if (!message || typeof message !== 'string' || message.trim() === '') {
+    throw new ValidationError('INVALID_REQUEST', "El campo 'message' es requerido y debe ser un string no vacío");
   }
 
   if (!projectExists(projectId)) {
-    const body: ApiError = {
-      error: {
-        code: "PROJECT_NOT_FOUND",
-        message: `Proyecto '${projectId}' no encontrado`,
-      },
-    };
-    res.status(404).json(body);
-    return;
+    throw new NotFoundError('PROJECT_NOT_FOUND', `Proyecto '${projectId}' no encontrado`);
   }
 
   const conversationId = `conv_${uuidv4().slice(0, 8)}`;
@@ -58,7 +30,9 @@ transformRouter.post("/:id", (req: Request, res: Response) => {
   res.status(202).json({
     success: true,
     conversationId,
-    status: "processing",
-    message: "La transformación se está procesando",
+    status: 'processing',
+    message: 'La transformación se está procesando',
   });
 });
+
+export default transformRouter;
