@@ -130,7 +130,7 @@ export async function saveVariation(
   }
 
   if (!variationId) {
-    throw new ApiError(409, 'VARIATION_ID_COLLISION', 'Could not generate unique variation ID after 3 attempts');
+    throw new ApiError('VARIATION_ID_COLLISION', 409, 'Could not generate unique variation ID after 3 attempts');
   }
 
   const now = new Date().toISOString();
