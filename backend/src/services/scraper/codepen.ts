@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer';
 import type { ProjectCode, ProjectSummary, ProjectMetadata } from '../../../../shared/types/index.js';
 import { extractPenInfo, generateProjectId, sleep } from '../../utils/helpers.js';
-import { ExtractionError, ValidationError } from '../../utils/errors.js';
+import { ExtractionError, NotFoundError, ValidationError } from '../../utils/errors.js';
 import { detectPreprocessors } from '../validation/preprocessors.js';
 import { generateLicense } from '../../utils/license.js';
 import { saveProjectFiles } from '../storage/fileManager.js';
@@ -40,7 +40,18 @@ async function extractPen(url: string): Promise<ExtractedCode> {
     const response = await page.goto(debugUrl, { waitUntil: 'networkidle0' });
 
     if (!response || response.status() === 404) {
-      throw new ExtractionError('PEN_NOT_FOUND', 'El Pen no existe o es privado', url);
+      throw new NotFoundError('PEN_NOT_FOUND', 'El Pen no existe o es privado');
+    }
+
+    // Detect CodePen's "not found" page (returns 200 but shows error content)
+    const is404Page = await page.evaluate(() => {
+      const title = document.title?.toLowerCase() || '';
+      const body = document.body?.textContent?.toLowerCase() || '';
+      return title.includes('404') || body.includes('this pen doesn') || body.includes('item not found');
+    });
+
+    if (is404Page) {
+      throw new NotFoundError('PEN_NOT_FOUND', 'El Pen no existe o es privado');
     }
 
     // Extract code from the debug page
@@ -120,8 +131,9 @@ async function extractWithRetry(url: string, retries: number = 3): Promise<Extra
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
 
-      // Don't retry validation errors or non-transient extraction errors
+      // Don't retry validation errors, not-found, or non-transient extraction errors
       if (error instanceof ValidationError) throw error;
+      if (error instanceof NotFoundError) throw error;
       if (error instanceof ExtractionError) throw error;
 
       // Exponential backoff: 1s, 2s, 4s
@@ -210,6 +222,7 @@ export async function extractAndSave(url: string): Promise<ProjectSummary> {
     return summary;
   } catch (error) {
     if (error instanceof ValidationError) throw error;
+    if (error instanceof NotFoundError) throw error;
     if (error instanceof ExtractionError) throw error;
 
     throw new ExtractionError(
