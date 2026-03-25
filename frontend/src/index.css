@@ -30,6 +30,11 @@ body {
   color: #16213e;
 }
 
+.app-header__link {
+  text-decoration: none;
+  color: inherit;
+}
+
 .app-header p {
   color: #666;
   margin-top: 0.25rem;
