@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { Home } from '../pages/Home.js';
 
 vi.mock('../services/api.js', () => ({
@@ -14,7 +15,7 @@ describe('Home', () => {
   it('shows error message when loading projects fails', async () => {
     mockedGetProjects.mockRejectedValueOnce(new Error('Network error'));
 
-    render(<Home />);
+    render(<MemoryRouter><Home /></MemoryRouter>);
 
     await waitFor(() => {
       expect(
@@ -33,11 +34,15 @@ describe('Home', () => {
           url: 'https://codepen.io/test/pen/abc',
           status: 'complete',
           extractedAt: new Date().toISOString(),
+          license: 'MIT',
+          hasCode: true,
+          hasVariations: false,
         },
       ],
+      total: 1,
     });
 
-    render(<Home />);
+    render(<MemoryRouter><Home /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Test Pen')).toBeInTheDocument();
