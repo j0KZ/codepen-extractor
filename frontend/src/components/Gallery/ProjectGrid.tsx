@@ -9,18 +9,6 @@ interface ProjectGridProps {
   onProjectClick: (project: ProjectSummary) => void;
 }
 
-const PREPROCESSOR_OPTIONS = [
-  { value: '', label: 'Todos los preprocesadores' },
-  { value: 'scss', label: 'SCSS' },
-  { value: 'less', label: 'Less' },
-  { value: 'stylus', label: 'Stylus' },
-  { value: 'pug', label: 'Pug' },
-  { value: 'haml', label: 'Haml' },
-  { value: 'babel', label: 'Babel' },
-  { value: 'typescript', label: 'TypeScript' },
-  { value: 'coffeescript', label: 'CoffeeScript' },
-];
-
 const SKELETON_COUNT = 6;
 
 function SkeletonCard() {
@@ -41,7 +29,7 @@ function SkeletonCard() {
 
 export function ProjectGrid({ projects, loading, onProjectClick }: ProjectGridProps) {
   const [search, setSearch] = useState('');
-  const [preprocessorFilter, setPreprocessorFilter] = useState('');
+  // TODO: agregar filtro por preprocessor cuando ProjectSummary incluya ese campo
 
   const filtered = useMemo(() => {
     let result = projects;
@@ -53,13 +41,8 @@ export function ProjectGrid({ projects, loading, onProjectClick }: ProjectGridPr
       );
     }
 
-    // El filtro por preprocesador no aplica a ProjectSummary directamente
-    // (no tiene campo preprocessors), pero lo dejamos preparado
-    // filtrando por el campo si existiera en datos extendidos.
-    // Por ahora solo se filtra por search.
-
     return result;
-  }, [projects, search, preprocessorFilter]);
+  }, [projects, search]);
 
   if (loading) {
     return (
@@ -94,6 +77,7 @@ export function ProjectGrid({ projects, loading, onProjectClick }: ProjectGridPr
 
   return (
     <div>
+      {/* TODO: agregar filtro por fecha (issue #10 - descoped para iteración futura) */}
       <div className="project-grid__toolbar">
         <input
           className="project-grid__search"
@@ -103,18 +87,6 @@ export function ProjectGrid({ projects, loading, onProjectClick }: ProjectGridPr
           onChange={(e) => setSearch(e.target.value)}
           aria-label="Buscar proyectos"
         />
-        <select
-          className="project-grid__filter"
-          value={preprocessorFilter}
-          onChange={(e) => setPreprocessorFilter(e.target.value)}
-          aria-label="Filtrar por preprocesador"
-        >
-          {PREPROCESSOR_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
       </div>
 
       {filtered.length === 0 ? (

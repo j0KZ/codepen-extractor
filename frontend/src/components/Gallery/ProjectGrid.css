@@ -85,7 +85,6 @@
 
 .skeleton-card__line {
   height: 0.75rem;
-  background: #eee;
   border-radius: 4px;
   animation: skeleton-shimmer 1.5s ease-in-out infinite;
   background: linear-gradient(90deg, #eee 25%, #e0e0e0 50%, #eee 75%);
