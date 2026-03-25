@@ -45,6 +45,7 @@ export function CodeEditor({ code, originalCode, onChange, readOnly = false, cla
   const codeRef = useRef(code);
   codeRef.current = code;
   const isInternalChange = useRef(false);
+  const isSyncDispatch = useRef(false);
   const originalCodeRef = useRef(originalCode);
 
   const destroyEditors = useCallback(() => {
@@ -95,7 +96,7 @@ export function CodeEditor({ code, originalCode, onChange, readOnly = false, cla
             EditorState.readOnly.of(readOnly),
             ...(readOnly ? [] : [
               EditorView.updateListener.of((update) => {
-                if (update.docChanged && onChangeRef.current) {
+                if (update.docChanged && !isSyncDispatch.current && onChangeRef.current) {
                   isInternalChange.current = true;
                   const newValue = update.state.doc.toString();
                   onChangeRef.current({
@@ -117,7 +118,7 @@ export function CodeEditor({ code, originalCode, onChange, readOnly = false, cla
         EditorState.readOnly.of(readOnly),
         ...(readOnly ? [] : [
           EditorView.updateListener.of((update) => {
-            if (update.docChanged && onChangeRef.current) {
+            if (update.docChanged && !isSyncDispatch.current && onChangeRef.current) {
               isInternalChange.current = true;
               const newValue = update.state.doc.toString();
               onChangeRef.current({
@@ -143,6 +144,7 @@ export function CodeEditor({ code, originalCode, onChange, readOnly = false, cla
       return;
     }
     const currentCode = getCodeForTab(code, activeTab);
+    isSyncDispatch.current = true;
     if (editorView.current) {
       const editorDoc = editorView.current.state.doc.toString();
       if (editorDoc !== currentCode) {
@@ -160,14 +162,14 @@ export function CodeEditor({ code, originalCode, onChange, readOnly = false, cla
         });
       }
     }
+    isSyncDispatch.current = false;
   }, [code, activeTab]);
 
   // Sync external originalCode changes — recreate MergeView only when originalCode actually changes
   useEffect(() => {
-    if (originalCode === originalCodeRef.current) return;
     originalCodeRef.current = originalCode;
-    if (!showDiff || !mergeView.current || !editorContainer.current) return;
-    const origCode = getCodeForTab(originalCode!, activeTab);
+    if (!showDiff || !mergeView.current || !editorContainer.current || !originalCode) return;
+    const origCode = getCodeForTab(originalCode, activeTab);
     const aEditor = mergeView.current.a;
     const aDoc = aEditor.state.doc.toString();
     if (aDoc !== origCode) {
