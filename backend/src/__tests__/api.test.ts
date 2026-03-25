@@ -68,7 +68,7 @@ describe('API endpoints', () => {
 
   describe('GET /api/projects/:id', () => {
     it('returns 404 for unknown project', async () => {
-      const res = await supertest(app).get('/api/projects/pen_nonexist');
+      const res = await supertest(app).get('/api/projects/pen_00000000');
       expect(res.status).toBe(404);
       expect(res.body.error.code).toBe('PROJECT_NOT_FOUND');
     });
