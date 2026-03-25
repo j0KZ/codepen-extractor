@@ -87,18 +87,24 @@ describe('useExtraction', () => {
 
   // --- Extracción exitosa ---
 
-  it('transiciona idle -> validating -> extracting -> success', async () => {
-    const states: string[] = [];
-
-    vi.mocked(api.extractPen).mockImplementation(() => {
-      return Promise.resolve({ success: true, project: mockProject } as ExtractResponse);
+  it('transiciona idle -> extracting -> success', async () => {
+    let resolveExtract!: (value: ExtractResponse) => void;
+    const pending = new Promise<ExtractResponse>((resolve) => {
+      resolveExtract = resolve;
     });
+    vi.mocked(api.extractPen).mockReturnValue(pending);
 
     const { result } = renderHook(() => useExtraction());
-    states.push(result.current.status);
+    expect(result.current.status).toBe('idle');
 
     await act(async () => {
-      await result.current.extract(VALID_URL);
+      void result.current.extract(VALID_URL);
+    });
+    expect(result.current.status).toBe('extracting');
+
+    await act(async () => {
+      resolveExtract({ success: true, project: mockProject } as ExtractResponse);
+      await pending;
     });
 
     expect(result.current.status).toBe('success');
@@ -170,7 +176,7 @@ describe('useExtraction', () => {
       },
     };
     const axios = await import('axios');
-    vi.spyOn(axios.default, 'isAxiosError').mockReturnValue(false);
+    vi.spyOn(axios.default, 'isAxiosError').mockReturnValue(true);
 
     vi.mocked(api.extractPen).mockRejectedValue(axiosError);
     const { result } = renderHook(() => useExtraction());
