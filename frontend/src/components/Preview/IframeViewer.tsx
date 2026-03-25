@@ -1,10 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import type { ProjectCode } from '../../../../shared/types';
 import './IframeViewer.css';
 
-interface IframeViewerProps {
-  html: string;
-  css: string;
-  js: string;
+interface IframeViewerProps extends ProjectCode {
   title?: string;
 }
 
@@ -23,15 +21,20 @@ const SIZE_LABELS: Record<SizePreset, string> = {
 };
 
 function buildSrcdoc(html: string, css: string, js: string): string {
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>${css}</style></head><body>${html}<script>${js}<\/script></body></html>`;
+  const safeJs = js.replace(/<\/script/gi, '<\\/script');
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:;"><style>${css}</style></head><body>${html}<script>${safeJs}<\/script></body></html>`;
 }
 
-export function IframeViewer({ html, css, js, title }: IframeViewerProps) {
+export function IframeViewer({ html, css = '', js = '', title }: IframeViewerProps) {
   const [size, setSize] = useState<SizePreset>('desktop');
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const srcdoc = buildSrcdoc(html, css, js);
+
+  useEffect(() => {
+    setLoading(true);
+  }, [srcdoc]);
 
   const handleRefresh = useCallback(() => {
     setLoading(true);
@@ -50,6 +53,7 @@ export function IframeViewer({ html, css, js, title }: IframeViewerProps) {
         <div className="iframe-viewer__controls">
           {(Object.keys(SIZE_WIDTHS) as SizePreset[]).map((preset) => (
             <button
+              type="button"
               key={preset}
               className={`iframe-viewer__size-btn${size === preset ? ' iframe-viewer__size-btn--active' : ''}`}
               onClick={() => setSize(preset)}
@@ -60,6 +64,7 @@ export function IframeViewer({ html, css, js, title }: IframeViewerProps) {
           ))}
 
           <button
+            type="button"
             className="iframe-viewer__refresh-btn"
             onClick={handleRefresh}
             aria-label="Recargar preview"
