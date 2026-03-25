@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { ProjectSummary } from '../../../shared/types/index.js';
 import { ExtractorPanel } from '../components/Extractor/ExtractorPanel.js';
-import { ProjectCard } from '../components/Gallery/ProjectCard.js';
+import { ProjectGrid } from '../components/Gallery/ProjectGrid.js';
 import { getProjects } from '../services/api.js';
 
 export function Home() {
@@ -43,20 +43,12 @@ export function Home() {
         <h2>Proyectos Extraidos</h2>
         {error ? (
           <p className="status-message status-error">{error}</p>
-        ) : loading ? (
-          <p className="loading-text">Cargando proyectos...</p>
-        ) : projects.length === 0 ? (
-          <p className="empty-text">No hay proyectos. Extrae tu primer CodePen.</p>
         ) : (
-          <div className="projects-grid">
-            {projects.map((project) => (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                onClick={handleProjectClick}
-              />
-            ))}
-          </div>
+          <ProjectGrid
+            projects={projects}
+            loading={loading}
+            onProjectClick={handleProjectClick}
+          />
         )}
       </section>
     </div>

@@ -1,0 +1,124 @@
+.project-grid__toolbar {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.project-grid__search {
+  flex: 1;
+  min-width: 180px;
+  padding: 0.6rem 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+
+.project-grid__search:focus {
+  outline: none;
+  border-color: #4361ee;
+}
+
+.project-grid__filter {
+  padding: 0.6rem 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.project-grid__filter:focus {
+  outline: none;
+  border-color: #4361ee;
+}
+
+.project-grid__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.project-grid__empty {
+  text-align: center;
+  color: #888;
+  padding: 3rem 1rem;
+}
+
+.project-grid__empty-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.project-grid__empty-text {
+  font-size: 0.9rem;
+}
+
+/* Skeleton */
+.project-grid__skeleton {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.skeleton-card {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.skeleton-card__thumbnail {
+  height: 120px;
+  background: linear-gradient(90deg, #eee 25%, #e0e0e0 50%, #eee 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-card__body {
+  padding: 0.75rem 1rem;
+}
+
+.skeleton-card__line {
+  height: 0.75rem;
+  background: #eee;
+  border-radius: 4px;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  background: linear-gradient(90deg, #eee 25%, #e0e0e0 50%, #eee 75%);
+  background-size: 200% 100%;
+}
+
+.skeleton-card__line--title {
+  width: 70%;
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-card__line--subtitle {
+  width: 45%;
+  height: 0.6rem;
+}
+
+.skeleton-card__footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 1rem 0.75rem;
+}
+
+.skeleton-card__line--badge {
+  width: 50px;
+  height: 0.6rem;
+}
+
+.skeleton-card__line--date {
+  width: 70px;
+  height: 0.6rem;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
