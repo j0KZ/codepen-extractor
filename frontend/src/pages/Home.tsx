@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { ProjectSummary } from '../../../shared/types/index.js';
 import { ExtractorPanel } from '../components/Extractor/ExtractorPanel.js';
 import { ProjectGrid } from '../components/Gallery/ProjectGrid.js';
 import { getProjects } from '../services/api.js';
 
 export function Home() {
+  const navigate = useNavigate();
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,8 +33,7 @@ export function Home() {
   };
 
   const handleProjectClick = (project: ProjectSummary) => {
-    // TODO: navigate to project detail
-    console.log('Open project:', project.id);
+    navigate(`/projects/${project.id}`);
   };
 
   return (
