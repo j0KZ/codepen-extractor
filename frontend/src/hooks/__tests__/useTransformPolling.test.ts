@@ -35,7 +35,7 @@ describe('useTransformPolling', () => {
 
     await act(async () => {
       result.current.startPolling('proj-1', 'conv-1');
-      await vi.runAllTimersAsync();
+      await vi.advanceTimersByTimeAsync(2000);
     });
 
     await act(async () => {
@@ -64,7 +64,7 @@ describe('useTransformPolling', () => {
 
     await act(async () => {
       result.current.startPolling('proj-1', 'conv-1');
-      await vi.runAllTimersAsync();
+      await vi.advanceTimersByTimeAsync(2000);
     });
 
     vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 301000);
@@ -91,7 +91,7 @@ describe('useTransformPolling', () => {
 
     await act(async () => {
       result.current.startPolling('proj-1', 'conv-1');
-      await vi.runAllTimersAsync();
+      await vi.advanceTimersByTimeAsync(2000);
     });
 
     const statusBefore = result.current.status;
@@ -117,11 +117,14 @@ describe('useTransformPolling', () => {
 
     await act(async () => {
       result.current.startPolling('proj-1', 'conv-1');
-      await vi.runAllTimersAsync();
     });
+
+    // startPolling fires the first fetch immediately; a next poll is scheduled at 2000ms
+    expect(fetch).toHaveBeenCalledTimes(1);
 
     unmount();
 
+    // After unmount, advancing timers should NOT trigger more fetches
     await act(async () => {
       await vi.advanceTimersByTimeAsync(5000);
     });
@@ -143,7 +146,7 @@ describe('useTransformPolling', () => {
 
     await act(async () => {
       result.current.startPolling('proj-1', 'conv-1');
-      await vi.runAllTimersAsync();
+      await vi.advanceTimersByTimeAsync(2000);
     });
 
     // First call fails, schedules retry with backoff (4000ms)
@@ -177,7 +180,7 @@ describe('useTransformPolling', () => {
 
     await act(async () => {
       result.current.startPolling('proj-1', 'conv-1');
-      await vi.runAllTimersAsync();
+      await vi.advanceTimersByTimeAsync(2000);
     });
 
     expect(onError).toHaveBeenCalledWith('Transformación no encontrada');
@@ -211,7 +214,7 @@ describe('useTransformPolling', () => {
 
     await act(async () => {
       result.current.startPolling('proj-1', 'conv-1');
-      await vi.runAllTimersAsync();
+      await vi.advanceTimersByTimeAsync(2000);
     });
 
     // 5xx triggers retry with double interval (4000ms)

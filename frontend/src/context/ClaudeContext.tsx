@@ -4,6 +4,7 @@ import {
   useReducer,
   useCallback,
   useRef,
+  useEffect,
   type ReactNode,
 } from 'react';
 import { useTransformPolling } from '../hooks/useTransformPolling';
@@ -67,7 +68,11 @@ const ClaudeContext = createContext<ClaudeContextValue | null>(null);
 
 export function ClaudeProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const pollingRef = useRef<ReturnType<typeof useTransformPolling>>(null);
+  const isProcessingRef = useRef(false);
+
+  useEffect(() => {
+    isProcessingRef.current = state.isProcessing;
+  }, [state.isProcessing]);
 
   const polling = useTransformPolling({
     onComplete: (result) => {
@@ -89,11 +94,9 @@ export function ClaudeProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  pollingRef.current = polling;
-
   const sendMessage = useCallback(
     async (projectId: string, content: string) => {
-      if (state.isProcessing) {
+      if (isProcessingRef.current) {
         throw new Error('Ya hay una transformación en proceso');
       }
 
@@ -122,7 +125,7 @@ export function ClaudeProvider({ children }: { children: ReactNode }) {
 
         const data = await res.json();
         dispatch({ type: 'SET_CONNECTED', payload: true });
-        pollingRef.current?.startPolling(projectId, data.conversationId);
+        polling.startPolling(projectId, data.conversationId);
       } catch (err) {
         const errorMsg =
           err instanceof Error ? err.message : 'Error al procesar transformación';
@@ -130,11 +133,11 @@ export function ClaudeProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'SET_PROCESSING', payload: false });
       }
     },
-    [state.isProcessing]
+    [polling]
   );
 
   const cancelTransform = useCallback(() => {
-    pollingRef.current?.stopPolling();
+    polling.stopPolling();
     dispatch({
       type: 'ADD_MESSAGE',
       payload: {
@@ -145,7 +148,7 @@ export function ClaudeProvider({ children }: { children: ReactNode }) {
       },
     });
     dispatch({ type: 'SET_PROCESSING', payload: false });
-  }, []);
+  }, [polling]);
 
   const clearMessages = useCallback(() => {
     dispatch({ type: 'CLEAR_MESSAGES' });
