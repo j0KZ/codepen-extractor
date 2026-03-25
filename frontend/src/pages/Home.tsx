@@ -6,13 +6,16 @@ import { getProjects } from '../services/api.js';
 export function Home() {
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchProjects = useCallback(async () => {
+    setError(null);
     try {
       const data = await getProjects();
       setProjects(data.projects);
-    } catch {
-      // Silently fail on initial load — API might not be ready
+    } catch (err) {
+      console.error('Error al cargar proyectos:', err);
+      setError('No se pudieron cargar los proyectos. Verifica que el servidor esté corriendo.');
     } finally {
       setLoading(false);
     }
@@ -32,7 +35,9 @@ export function Home() {
 
       <section className="projects-section">
         <h2>Proyectos Extraidos</h2>
-        {loading ? (
+        {error ? (
+          <p className="status-message status-error">{error}</p>
+        ) : loading ? (
           <p className="loading-text">Cargando proyectos...</p>
         ) : projects.length === 0 ? (
           <p className="empty-text">No hay proyectos. Extrae tu primer CodePen.</p>
